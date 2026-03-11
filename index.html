@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MLBB Region Checker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-200 font-mono flex items-center justify-center min-h-screen p-4">
+    <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-cyan-500/30">
+        <h1 class="text-3xl font-bold text-center mb-2 text-cyan-400">Region<span class="text-pink-500">.</span>Checker</h1>
+        <p class="text-center text-gray-400 text-sm mb-6">Region Checker v3.0 <span class="text-pink-400">(Live on Render)</span></p>
+
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium mb-1 text-gray-400">ID Player</label>
+                <input type="text" id="playerId" placeholder="12345678" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none text-white">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1 text-gray-400">ID Server</label>
+                <input type="text" id="serverId" placeholder="1234" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none text-white">
+            </div>
+
+            <button id="checkBtn" class="w-full bg-gradient-to-r from-cyan-500 to-pink-500 hover:from-cyan-600 hover:to-pink-600 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-[1.02]">
+              Check Region
+            </button>
+        </div>
+
+        <div id="resultArea" class="mt-6 p-4 bg-gray-900/50 rounded-lg border border-gray-700 min-h-[100px]">
+            <p class="text-xs text-gray-500 mb-2">[OUTPUT]</p>
+            <div id="resultContent" class="text-sm">
+                Enter your ID and Server. Click Check Region.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const checkBtn = document.getElementById('checkBtn');
+        const playerIdInput = document.getElementById('playerId');
+        const serverIdInput = document.getElementById('serverId');
+        const resultContent = document.getElementById('resultContent');
+
+        checkBtn.addEventListener('click', async () => {
+            const playerId = playerIdInput.value.trim();
+            const serverId = serverIdInput.value.trim();
+
+            if (!playerId || !serverId) {
+                resultContent.innerHTML = `<span class="text-red-400">[!] ERROR: Please enter your ID and Server!</span>`;
+                return;
+            }
+
+            resultContent.innerHTML = `Finding..: ${playerId} (${serverId})...`;
+
+            // PENTING: PAKE RELATIVE URL! GAK USAH PAKE localhost
+            const backendUrl = `/cek-region?id=${playerId}&server=${serverId}`;
+
+            try {
+                const response = await fetch(backendUrl);
+                const apiResult = await response.json();
+
+                if (apiResult.success) {
+                    resultContent.innerHTML = `
+                        <span class="text-green-400">[✔] DATA FOUND!</span><br>
+                        <span class="text-gray-400">Username:</span> ${apiResult.username || 'Unknown'}<br>
+                        <span class="text-gray-400">ID Server:</span> <span class="text-cyan-300 font-bold">${serverId}</span><br>
+                        <span class="text-xs text-gray-600 mt-2 block">Creator: ${apiResult.creator || 'N/A'}</span>
+                    `;
+                } else {
+                    resultContent.innerHTML = `<span class="text-red-400">[✖] FAILED: ${apiResult.message || 'Player not found.'}</span>`;
+                }
+            } catch (error) {
+                resultContent.innerHTML = `<span class="text-red-400">[!] FETCH ERROR: ${error.message}</span>`;
+            }
+        });
+    </script>
+</body>
+</html>
