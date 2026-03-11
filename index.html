@@ -40,6 +40,31 @@
         const serverIdInput = document.getElementById('serverId');
         const resultContent = document.getElementById('resultContent');
 
+        // Fungsi mapping server ID ke region
+        function getRegionFromServerId(serverId) {
+            const id = parseInt(serverId);
+            
+            // Mapping berdasarkan range angka
+            if (id >= 1000 && id < 2000) return "South America";
+            if (id >= 2000 && id < 3000) return "Europe / Indonesia";
+            if (id >= 3000 && id < 4000) return "Singapore / Philippines";
+            if (id >= 4000 && id < 5000) return "Southeast Asia";
+            if (id >= 5000 && id < 6000) return "Asia";
+            if (id >= 6000 && id < 7000) return "Russia / Central Asia";
+            if (id >= 7000 && id < 8000) return "Philippines";
+            if (id >= 8000 && id < 9000) return "Japan / Korea";
+            
+            // Mapping berdasarkan prefix
+            const serverStr = serverId.toString();
+            if (serverStr.startsWith("51")) return "Europe";
+            if (serverStr.startsWith("52")) return "Russia";
+            if (serverStr.startsWith("53")) return "North America";
+            if (serverStr.startsWith("54")) return "South America";
+            if (serverStr.startsWith("55")) return "Southeast Asia";
+            
+            return "Unknown Region";
+        }
+
         checkBtn.addEventListener('click', async () => {
             const playerId = playerIdInput.value.trim();
             const serverId = serverIdInput.value.trim();
@@ -49,24 +74,32 @@
                 return;
             }
 
-            resultContent.innerHTML = `Finding..: ${playerId} (${serverId})...`;
+            resultContent.innerHTML = `<span class="text-cyan-400">🔍 Finding..</span> ${playerId} (${serverId})...`;
 
-            // PENTING: PAKE RELATIVE URL! GAK USAH PAKE localhost
             const backendUrl = `/cek-region?id=${playerId}&server=${serverId}`;
 
             try {
                 const response = await fetch(backendUrl);
                 const apiResult = await response.json();
+                
+                // Dapatkan region dari server ID
+                const region = getRegionFromServerId(serverId);
 
                 if (apiResult.success) {
+                    // UDAH GA ADA CREATOR - BERES!
                     resultContent.innerHTML = `
                         <span class="text-green-400">[✔] DATA FOUND!</span><br>
-                        <span class="text-gray-400">Username:</span> ${apiResult.username || 'Unknown'}<br>
-                        <span class="text-gray-400">ID Server:</span> <span class="text-cyan-300 font-bold">${serverId}</span><br>
-                        <span class="text-xs text-gray-600 mt-2 block">Creator: ${apiResult.creator || 'N/A'}</span>
+                        <span class="text-gray-400">Username:</span> <span class="text-white font-bold">${apiResult.username || 'Unknown'}</span><br>
+                        <span class="text-gray-400">Server ID:</span> <span class="text-cyan-300 font-bold">${serverId}</span><br>
+                        <span class="text-gray-400">Region:</span> <span class="text-pink-400 font-bold">${region}</span>
                     `;
                 } else {
-                    resultContent.innerHTML = `<span class="text-red-400">[✖] FAILED: ${apiResult.message || 'Player not found.'}</span>`;
+                    // Tetap tampilkan region meskipun data tidak ditemukan
+                    resultContent.innerHTML = `
+                        <span class="text-red-400">[✖] FAILED: ${apiResult.message || 'Player not found.'}</span><br>
+                        <span class="text-gray-400">Server ID:</span> ${serverId}<br>
+                        <span class="text-gray-400">Region (estimate):</span> <span class="text-pink-400">${region}</span>
+                    `;
                 }
             } catch (error) {
                 resultContent.innerHTML = `<span class="text-red-400">[!] FETCH ERROR: ${error.message}</span>`;
